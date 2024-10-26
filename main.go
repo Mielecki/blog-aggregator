@@ -1,14 +1,17 @@
 package main
 
 import (
-	"fmt"
+	"database/sql"
 	"log"
 	"os"
 
 	"github.com/Mielecki/blog-aggregator/internal/config"
+	"github.com/Mielecki/blog-aggregator/internal/database"
+	_ "github.com/lib/pq"
 )
 
 type state struct {
+	db *database.Queries
 	config *config.Config
 }
 
@@ -19,16 +22,29 @@ func main() {
 	}
 	config_file, err := config.Read()
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Fatal(err)
 	}
-	s := state{&config_file}
+
+	db, err := sql.Open("postgres", config_file.DbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dbQueries := database.New(db)
+
+	s := state{
+		db: dbQueries,
+		config: &config_file,
+	}
 	cmds := commands{make(map[string]func(*state, command) error)}
 	cmds.register("login", handlerLogin)
+	cmds.register("register", handlerRegister)
+	cmds.register("reset", handlerReset)
 	cmd := command{
-		name: "login",
+		name: args[1],
 		args: args[2:],
 	}
 	if err := cmds.run(&s, cmd); err != nil {
-		log.Fatalf(err.Error())
+		log.Fatal(err)
 	}
 }

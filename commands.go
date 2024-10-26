@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 )
 
 type command struct {
@@ -12,23 +11,6 @@ type command struct {
 
 type commands struct {
 	cmdHandler map[string]func(*state, command) error
-}
-
-// This function handles the login command, setting username in the given state.config struct
-func handlerLogin(s *state, cmd command) error {
-	if len(cmd.args) == 0 {
-		return errors.New("the login command expects a single argument, the username")
-	}
-
-	username := cmd.args[0]
-
-	if err := s.config.SetUser(username); err != nil {
-		return err
-	}
-
-	fmt.Println("The user " + username + " has been set")
-
-	return nil
 }
 
 // This method registers a new handler function for a command name
