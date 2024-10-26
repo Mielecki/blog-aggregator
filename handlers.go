@@ -88,6 +88,7 @@ func handlerAgg(s *state, cmd command) error {
 	return nil
 }
 
+// This function handles the addfeed command, adding a new feed to feeds table
 func handlerAddFeed(s *state, cmd command) error {
 	if len(cmd.args) < 2 {
 		return errors.New("the login command expects two arguments, the name and URL of the feed")
@@ -113,6 +114,19 @@ func handlerAddFeed(s *state, cmd command) error {
 	}
 
 	fmt.Println(feed)
+
+	return nil
+}
+
+func handlerFeeds(s *state, cmd command) error {
+	feedsUser, err := s.db.GetFeedsWithUsername(context.Background())
+	if err != nil {
+		return err
+	}
+
+	for _, item := range feedsUser {
+		fmt.Printf(`* Feed: "%s" URL: "%s" User: "%s"\n`, item.Name, item.Url, item.Name_2)
+	}
 
 	return nil
 }
