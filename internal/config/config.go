@@ -53,7 +53,7 @@ func (conifg *Config) SetUser(current_user_name string) error {
 	return nil
 }
 
-// This function writes/updates the config file on disk
+// This function writes/updates the config file on a disk
 func write(config Config) error {
 	path, err := getConfigFilePath()
 	if err != nil {
