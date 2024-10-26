@@ -58,7 +58,7 @@ func handlerRegister(s *state, cmd command) error {
 	return nil
 }
 
-// Thus fucntion handles users command, listing all existing users
+// Thus fucntion handles the users command, listing all existing users
 func handlerUsers(s *state, cmd command) error {
 	users, err := s.db.GetUsers(context.Background())
 	if err != nil {
@@ -76,7 +76,48 @@ func handlerUsers(s *state, cmd command) error {
 	return nil
 }
 
-// This function handles reset command, deleting all records from users table (only for development purpose)
+// This function handles the agg command, fetching RSS from a given website
+func handlerAgg(s *state, cmd command) error {
+	fetchURL := "https://www.wagslane.dev/index.xml"
+	RSSFeed, err := fetchFeed(context.Background(), fetchURL)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(RSSFeed)
+	return nil
+}
+
+func handlerAddFeed(s *state, cmd command) error {
+	if len(cmd.args) < 2 {
+		return errors.New("the login command expects two arguments, the name and URL of the feed")
+	}
+
+	name := cmd.args[0]
+	url := cmd.args[1]
+	user, err := s.db.GetUser(context.Background(), s.config.CurrentUserName)
+	if err != nil {
+		return err
+	}	
+
+	feed, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
+		ID: uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name: name,
+		Url: url,
+		UserID: user.ID,
+	})
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(feed)
+
+	return nil
+}
+
+// This function handles the reset command, deleting all records from users table (ONLY FOR DEVELOPMENT PURPOSE!!!)
 func handlerReset(s *state, cmd command) error {
 	if err := s.db.Reset(context.Background()); err != nil {
 		return err
