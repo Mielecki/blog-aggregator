@@ -58,6 +58,24 @@ func handlerRegister(s *state, cmd command) error {
 	return nil
 }
 
+// Thus fucntion handles users command, listing all existing users
+func handlerUsers(s *state, cmd command) error {
+	users, err := s.db.GetUsers(context.Background())
+	if err != nil {
+		return err
+	}
+
+	for _, user := range users {
+		if user.Name == s.config.CurrentUserName {
+			fmt.Println("* " + user.Name + " (current)")
+		} else {
+			fmt.Println("* " + user.Name)
+		}
+	}
+
+	return nil
+}
+
 // This function handles reset command, deleting all records from users table (only for development purpose)
 func handlerReset(s *state, cmd command) error {
 	if err := s.db.Reset(context.Background()); err != nil {
