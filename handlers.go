@@ -89,17 +89,13 @@ func handlerAgg(s *state, cmd command) error {
 }
 
 // This function handles the addfeed command, adding a new feed to feeds table
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.args) < 2 {
 		return errors.New("the addfeed command expects two arguments, the name and URL of the feed")
 	}
 
 	name := cmd.args[0]
 	url := cmd.args[1]
-	user, err := s.db.GetUser(context.Background(), s.config.CurrentUserName)
-	if err != nil {
-		return err
-	}	
 
 	feed, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
 		ID: uuid.New(),
@@ -116,7 +112,7 @@ func handlerAddFeed(s *state, cmd command) error {
 	err = handlerFollow(s, command{
 		name: "follow",
 		args: []string{url},
-	})
+	}, user)
 
 	if err != nil {
 		return nil
@@ -143,17 +139,12 @@ func handlerFeeds(s *state, cmd command) error {
 }
 
 // This function handles the follow command, creating a new record in feed_follow table joining feeds with users table
-func handlerFollow(s *state, cmd command) error {
+func handlerFollow(s *state, cmd command, user database.User) error {
 	if len(cmd.args) == 0 {
 		return errors.New("the follow command expects one argument, the URL of the feed to follow")
 	}
 
 	url := cmd.args[0]
-
-	user, err := s.db.GetUser(context.Background(), s.config.CurrentUserName)
-	if err != nil {
-		return err
-	}
 
 	feed, err := s.db.GetFeedByURL(context.Background(), url)
 	if err != nil {
@@ -177,11 +168,7 @@ func handlerFollow(s *state, cmd command) error {
 }
 
 // This function handles the following command, listing all feeds followed by the current user
-func handlerFollowing(s *state, cmd command) error {
-	user, err := s.db.GetUser(context.Background(), s.config.CurrentUserName)
-	if err != nil {
-		return err
-	}
+func handlerFollowing(s *state, cmd command, user database.User) error {
 
 	feed_follows, err := s.db.GetFeedFollowsForUser(context.Background(), user.ID)
 	if err != nil {
