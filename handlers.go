@@ -78,14 +78,23 @@ func handlerUsers(s *state, cmd command) error {
 
 // This function handles the agg command, fetching RSS from a given website
 func handlerAgg(s *state, cmd command) error {
-	fetchURL := "https://www.wagslane.dev/index.xml"
-	RSSFeed, err := fetchFeed(context.Background(), fetchURL)
+	if len(cmd.args) == 0 {
+		return errors.New("the agg command expects a single argument, the time_between_reqs")
+	}
+
+	time_unparsed := cmd.args[0]
+	time_between_reqs, err := time.ParseDuration(time_unparsed)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(RSSFeed)
-	return nil
+	fmt.Println("Collecting feeds every " + time_between_reqs.String())
+	ticker := time.NewTicker(time_between_reqs)
+	for ; ; <-ticker.C {
+		if err := scrapeFeeds(s); err != nil {
+			return err
+		}
+	}			
 }
 
 // This function handles the addfeed command, adding a new feed to feeds table
@@ -97,7 +106,7 @@ func handlerAddFeed(s *state, cmd command, user database.User) error {
 	name := cmd.args[0]
 	url := cmd.args[1]
 
-	feed, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
+	_, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
 		ID: uuid.New(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -117,8 +126,6 @@ func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if err != nil {
 		return nil
 	}
-
-	fmt.Println(feed)
 
 	return nil
 }
