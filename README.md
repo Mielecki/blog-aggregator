@@ -1,6 +1,6 @@
 # Blog aggregator
 
-Blog aggregator is a command-line tool built with Go, designed to fetch and menage data from RSS feeds, storing it in a PostgreSQL data base.
+Blog aggregator is a command-line tool built with Go, designed to fetch and menage data from RSS feeds, storing it in a PostgreSQL database.
 
 This project uses [sqlc](https://docs.sqlc.dev/en/latest/index.html) to generate Go code based on the provided SQL queries. It also uses [goose](https://github.com/pressly/goose/) for easy up/down database migrations.
 
@@ -23,3 +23,5 @@ This project uses [sqlc](https://docs.sqlc.dev/en/latest/index.html) to generate
 * Working with APIs,
 * Web Scraping,
 * SQL & PostgreSQL
+
+This project was developed as part of the Boot.dev online course.
