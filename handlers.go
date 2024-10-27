@@ -169,7 +169,6 @@ func handlerFollow(s *state, cmd command, user database.User) error {
 
 // This function handles the following command, listing all feeds followed by the current user
 func handlerFollowing(s *state, cmd command, user database.User) error {
-
 	feed_follows, err := s.db.GetFeedFollowsForUser(context.Background(), user.ID)
 	if err != nil {
 		return err
@@ -178,6 +177,23 @@ func handlerFollowing(s *state, cmd command, user database.User) error {
 	for _, item := range feed_follows {
 		fmt.Printf(`* Feed: "%s" Created by: "%s"`, item.FeedName, item.CreatedBy)
 		fmt.Println()
+	}
+
+	return nil
+}
+
+func handlerUnfollow(s *state, cmd command, user database.User) error {
+	if len(cmd.args) == 0 {
+		return errors.New("the unfollow command expects one argument, the URL of the feed to unfollow")
+	}
+
+	url := cmd.args[0]
+	err := s.db.DeleteFeedFollowRecord(context.Background(), database.DeleteFeedFollowRecordParams{
+		UserID: user.ID,
+		Url: url,
+	})
+	if err != nil {
+		return err
 	}
 
 	return nil
