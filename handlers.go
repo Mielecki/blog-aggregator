@@ -91,7 +91,7 @@ func handlerAgg(s *state, cmd command) error {
 // This function handles the addfeed command, adding a new feed to feeds table
 func handlerAddFeed(s *state, cmd command) error {
 	if len(cmd.args) < 2 {
-		return errors.New("the login command expects two arguments, the name and URL of the feed")
+		return errors.New("the addfeed command expects two arguments, the name and URL of the feed")
 	}
 
 	name := cmd.args[0]
@@ -113,11 +113,21 @@ func handlerAddFeed(s *state, cmd command) error {
 		return err
 	}
 
+	err = handlerFollow(s, command{
+		name: "follow",
+		args: []string{url},
+	})
+
+	if err != nil {
+		return nil
+	}
+
 	fmt.Println(feed)
 
 	return nil
 }
 
+// This funciton handles feeds commands, listing all existing feeds
 func handlerFeeds(s *state, cmd command) error {
 	feedsUser, err := s.db.GetFeedsWithUsername(context.Background())
 	if err != nil {
@@ -126,6 +136,61 @@ func handlerFeeds(s *state, cmd command) error {
 
 	for _, item := range feedsUser {
 		fmt.Printf(`* Feed: "%s" URL: "%s" User: "%s"\n`, item.Name, item.Url, item.Name_2)
+		fmt.Println()
+	}
+
+	return nil
+}
+
+// This function handles the follow command, creating a new record in feed_follow table joining feeds with users table
+func handlerFollow(s *state, cmd command) error {
+	if len(cmd.args) == 0 {
+		return errors.New("the follow command expects one argument, the URL of the feed to follow")
+	}
+
+	url := cmd.args[0]
+
+	user, err := s.db.GetUser(context.Background(), s.config.CurrentUserName)
+	if err != nil {
+		return err
+	}
+
+	feed, err := s.db.GetFeedByURL(context.Background(), url)
+	if err != nil {
+		return err
+	}
+
+	feed_follows, err := s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID: uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID: user.ID,
+		FeedID: feed.ID,
+	})
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf(`User: "%s" Followed feed: "%s"`, feed_follows.Name_2, feed_follows.Name)
+	fmt.Println()
+	return nil
+}
+
+// This function handles the following command, listing all feeds followed by the current user
+func handlerFollowing(s *state, cmd command) error {
+	user, err := s.db.GetUser(context.Background(), s.config.CurrentUserName)
+	if err != nil {
+		return err
+	}
+
+	feed_follows, err := s.db.GetFeedFollowsForUser(context.Background(), user.ID)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range feed_follows {
+		fmt.Printf(`* Feed: "%s" Created by: "%s"`, item.FeedName, item.CreatedBy)
+		fmt.Println()
 	}
 
 	return nil
