@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/Mielecki/blog-aggregator/internal/database"
@@ -189,6 +190,7 @@ func handlerFollowing(s *state, cmd command, user database.User) error {
 	return nil
 }
 
+// This function handles the unfollow command, removing record from feed_follows table
 func handlerUnfollow(s *state, cmd command, user database.User) error {
 	if len(cmd.args) == 0 {
 		return errors.New("the unfollow command expects one argument, the URL of the feed to unfollow")
@@ -204,6 +206,35 @@ func handlerUnfollow(s *state, cmd command, user database.User) error {
 	}
 
 	return nil
+}
+
+func handlerBrowse(s *state, cmd command, user database.User) error {
+	limit := 2
+	if len(cmd.args) > 0 {
+		atoi, err := strconv.Atoi(cmd.args[0])
+		if err != nil {
+			return err
+		}
+		limit = atoi
+	}
+	posts, err := s.db.GetPostsForUser(context.Background(), database.GetPostsForUserParams{
+		UserID: user.ID,
+		Limit: int32(limit),
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, item := range posts {
+		fmt.Println("***********************************")
+		fmt.Println("Published at: \n" + item.PublishedAt.Time.Format(time.RFC822))
+		fmt.Println("From: " + item.Name)
+		fmt.Println("Title: \n" + item.Title)
+		fmt.Println("Descrption: \n" + item.Description.String)
+		fmt.Println("Link: " + item.Url)
+		fmt.Println("***********************************")
+	}
+	return nil 
 }
 
 // This function handles the reset command, deleting all records from users table (ONLY FOR DEVELOPMENT PURPOSE!!!)

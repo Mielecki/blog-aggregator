@@ -13,8 +13,9 @@ VALUES (
 RETURNING *;
 
 -- name: GetPostsForUser :many
-SELECT *
+SELECT posts.*, feeds.name
 FROM posts
 INNER JOIN feed_follows ON feed_follows.feed_id = posts.feed_id
+INNER JOIN feeds ON feeds.id = posts.feed_id
 WHERE feed_follows.user_id = $1
 LIMIT $2;
