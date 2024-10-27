@@ -2,7 +2,13 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"database/sql"
+	"log"
+	"strings"
+	"time"
+
+	"github.com/Mielecki/blog-aggregator/internal/database"
+	"github.com/google/uuid"
 )
 
 func scrapeFeeds(s *state,) error {
@@ -22,8 +28,33 @@ func scrapeFeeds(s *state,) error {
 	}
 
 	for _, item := range RSSFeed.Channel.Item {
-		fmt.Println(item.Title)
+		published_at := sql.NullTime{}
+		if t, err := time.Parse(time.RFC1123Z, item.PubDate); err == nil {
+			published_at = sql.NullTime{
+				Time:  t,
+				Valid: true,
+			}
+		}
+
+		_, err := s.db.CreatePost(context.Background(), database.CreatePostParams{
+			ID: uuid.New(),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			Title: item.Title,
+			Url: item.Link,
+			Description: sql.NullString{String: item.Description, Valid: true},
+			PublishedAt: published_at,
+			FeedID: to_fetch.ID,
+		})
+
+		if err != nil {
+			if strings.Contains(err.Error(), "duplicate key value") {
+				continue
+			}
+			log.Println("Couldnot create post: " + err.Error())
+		}
 	}
-	
+
+	log.Printf(`Feed: "%s" collected`, to_fetch.Name)
 	return nil
 }

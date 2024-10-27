@@ -92,7 +92,7 @@ func handlerAgg(s *state, cmd command) error {
 	ticker := time.NewTicker(time_between_reqs)
 	for ; ; <-ticker.C {
 		if err := scrapeFeeds(s); err != nil {
-			return err
+			fmt.Println(err.Error())
 		}
 	}			
 }
